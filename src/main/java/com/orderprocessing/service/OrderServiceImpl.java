@@ -7,8 +7,8 @@ import com.orderprocessing.model.Order;
 import com.orderprocessing.model.OrderItem;
 import com.orderprocessing.model.OrderStatus;
 import com.orderprocessing.repository.OrderRepository;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,29 +17,30 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
-@Slf4j
 public class OrderServiceImpl implements OrderService {
 
+    private static final Logger log = LoggerFactory.getLogger(OrderServiceImpl.class);
     private final OrderRepository orderRepository;
+
+    public OrderServiceImpl(OrderRepository orderRepository) {
+        this.orderRepository = orderRepository;
+    }
 
     @Override
     @Transactional
     public OrderResponse createOrder(CreateOrderRequest request) {
         log.info("Creating new order for customer: {}", request.getCustomerName());
 
-        Order order = Order.builder()
-                .customerName(request.getCustomerName())
-                .status(OrderStatus.PENDING)
-                .build();
+        Order order = new Order();
+        order.setCustomerName(request.getCustomerName());
+        order.setStatus(OrderStatus.PENDING);
 
         // Map each item request to an OrderItem entity and link to the order
         request.getItems().forEach(itemRequest -> {
-            OrderItem item = OrderItem.builder()
-                    .productName(itemRequest.getProductName())
-                    .quantity(itemRequest.getQuantity())
-                    .price(itemRequest.getPrice())
-                    .build();
+            OrderItem item = new OrderItem();
+            item.setProductName(itemRequest.getProductName());
+            item.setQuantity(itemRequest.getQuantity());
+            item.setPrice(itemRequest.getPrice());
             order.addItem(item);
         });
 
@@ -129,27 +130,27 @@ public class OrderServiceImpl implements OrderService {
      * Entities are NEVER returned from public methods — always mapped to DTOs.
      */
     private OrderResponse mapToResponse(Order order) {
-        return OrderResponse.builder()
-                .id(order.getId())
-                .customerName(order.getCustomerName())
-                .status(order.getStatus())
-                .createdAt(order.getCreatedAt())
-                .updatedAt(order.getUpdatedAt())
-                .items(order.getItems().stream()
-                        .map(this::mapToItemResponse)
-                        .collect(Collectors.toList()))
-                .build();
+        OrderResponse response = new OrderResponse();
+        response.setId(order.getId());
+        response.setCustomerName(order.getCustomerName());
+        response.setStatus(order.getStatus());
+        response.setCreatedAt(order.getCreatedAt());
+        response.setUpdatedAt(order.getUpdatedAt());
+        response.setItems(order.getItems().stream()
+                .map(this::mapToItemResponse)
+                .collect(Collectors.toList()));
+        return response;
     }
 
     /**
      * Map an OrderItem entity to an OrderItemResponse DTO.
      */
     private OrderItemResponse mapToItemResponse(OrderItem item) {
-        return OrderItemResponse.builder()
-                .id(item.getId())
-                .productName(item.getProductName())
-                .quantity(item.getQuantity())
-                .price(item.getPrice())
-                .build();
+        OrderItemResponse response = new OrderItemResponse();
+        response.setId(item.getId());
+        response.setProductName(item.getProductName());
+        response.setQuantity(item.getQuantity());
+        response.setPrice(item.getPrice());
+        return response;
     }
 }
