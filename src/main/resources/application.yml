@@ -18,3 +18,7 @@ springdoc:
     path: /api-docs
   swagger-ui:
     path: /swagger-ui.html
+
+app:
+  scheduler:
+    interval: 300000 # 5 minutes default
