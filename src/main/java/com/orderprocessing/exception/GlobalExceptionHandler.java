@@ -1,8 +1,7 @@
 package com.orderprocessing.exception;
 
 import com.orderprocessing.dto.ErrorResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -15,29 +14,30 @@ import java.util.HashMap;
 import java.util.Map;
 
 @ControllerAdvice
+@Slf4j
 public class GlobalExceptionHandler {
-
-    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(OrderNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleOrderNotFound(OrderNotFoundException ex) {
         log.error("Order not found: {}", ex.getMessage());
-        ErrorResponse error = new ErrorResponse();
-        error.setTimestamp(LocalDateTime.now());
-        error.setStatus(HttpStatus.NOT_FOUND.value());
-        error.setMessage(ex.getMessage());
-        error.setDetails("Resource not found");
+        ErrorResponse error = ErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.NOT_FOUND.value())
+                .message(ex.getMessage())
+                .details("Resource not found")
+                .build();
         return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler(InvalidOrderStateException.class)
     public ResponseEntity<ErrorResponse> handleInvalidOrderState(InvalidOrderStateException ex) {
         log.error("Invalid order state: {}", ex.getMessage());
-        ErrorResponse error = new ErrorResponse();
-        error.setTimestamp(LocalDateTime.now());
-        error.setStatus(HttpStatus.CONFLICT.value());
-        error.setMessage(ex.getMessage());
-        error.setDetails("Illegal state transition");
+        ErrorResponse error = ErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.CONFLICT.value())
+                .message(ex.getMessage())
+                .details("Illegal state transition")
+                .build();
         return new ResponseEntity<>(error, HttpStatus.CONFLICT);
     }
 
@@ -51,23 +51,25 @@ public class GlobalExceptionHandler {
             errors.put(fieldName, errorMessage);
         });
 
-        ErrorResponse error = new ErrorResponse();
-        error.setTimestamp(LocalDateTime.now());
-        error.setStatus(HttpStatus.BAD_REQUEST.value());
-        error.setMessage("Validation failed");
-        error.setDetails("One or more fields are invalid");
-        error.setValidationErrors(errors);
+        ErrorResponse error = ErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.BAD_REQUEST.value())
+                .message("Validation failed")
+                .details("One or more fields are invalid")
+                .validationErrors(errors)
+                .build();
         return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGlobalException(Exception ex) {
         log.error("Internal server error: ", ex);
-        ErrorResponse error = new ErrorResponse();
-        error.setTimestamp(LocalDateTime.now());
-        error.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
-        error.setMessage("An unexpected error occurred");
-        error.setDetails(ex.getMessage());
+        ErrorResponse error = ErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                .message("An unexpected error occurred")
+                .details(ex.getMessage())
+                .build();
         return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }
