@@ -6,6 +6,14 @@ REM ============================================
 SET CMD=%1
 IF "%CMD%"=="" SET CMD=dev
 
+REM Load environment variables from .env file if it exists
+IF EXIST .env (
+    echo [INFO] Loading environment variables from .env...
+    FOR /F "usebackq tokens=1,2 delims==" %%i IN (".env") DO (
+        SET %%i=%%j
+    )
+)
+
 IF "%CMD%"=="test" GOTO :test
 IF "%CMD%"=="build" GOTO :build
 IF "%CMD%"=="package" GOTO :package
