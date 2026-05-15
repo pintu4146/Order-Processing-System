@@ -1,11 +1,11 @@
 ﻿======================================
-SIT API EXECUTION LOG: 05/15/2026 14:55:02
+SIT API EXECUTION LOG: 05/15/2026 18:49:58
 ======================================
 1. Checking Application Health...
 âœ… Health check PASSED.
 
 2. Creating a new Order...
-Response: {"id":1,"customerName":"QA Engineer","status":"PENDING","totalAmount":95.5,"createdAt":"2026-05-15T14:55:03.933556","updatedAt":"2026-05-15T14:55:03.933556","items":[{"id":1,"productName":"Integration Book","quantity":2,"price":45},{"id":2,"productName":"Coffee","quantity":1,"price":5.5}]}
+Response: {"id":1,"customerName":"QA Engineer","status":"PENDING","totalAmount":95.5,"createdAt":"2026-05-15T18:50:00.35798","updatedAt":"2026-05-15T18:50:00.35798","items":[{"id":1,"productName":"Integration Book","quantity":2,"price":45},{"id":2,"productName":"Coffee","quantity":1,"price":5.5}]}
 âœ… Order creation PASSED. ID: 1
 
 3. Retrieving Order Details...
