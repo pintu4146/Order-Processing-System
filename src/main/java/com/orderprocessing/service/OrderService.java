@@ -3,6 +3,8 @@ package com.orderprocessing.service;
 import com.orderprocessing.dto.CreateOrderRequest;
 import com.orderprocessing.dto.OrderResponse;
 import com.orderprocessing.model.OrderStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
@@ -24,10 +26,15 @@ public interface OrderService {
     OrderResponse getOrderById(Long id);
 
     /**
-     * List all orders, optionally filtered by status.
+     * List all orders, optionally filtered by status (unpaginated).
      * @param status if null, returns all orders; otherwise filters by the given status
      */
     List<OrderResponse> getAllOrders(OrderStatus status);
+
+    /**
+     * List all orders with pagination, optionally filtered by status.
+     */
+    Page<OrderResponse> getAllOrders(OrderStatus status, Pageable pageable);
 
     /**
      * Cancel an order. Only PENDING orders can be cancelled.

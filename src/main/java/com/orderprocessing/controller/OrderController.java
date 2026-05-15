@@ -9,6 +9,10 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -39,10 +43,12 @@ public class OrderController {
     }
 
     @GetMapping
-    @Operation(summary = "List all orders", description = "Retrieves a list of all orders, optionally filtered by their current status.")
-    public ResponseEntity<List<OrderResponse>> getAllOrders(
-            @Parameter(description = "Optional status to filter orders by") @RequestParam(required = false) OrderStatus status) {
-        List<OrderResponse> responses = orderService.getAllOrders(status);
+    @Operation(summary = "List all orders", description = "Retrieves a paginated list of all orders, optionally filtered by their current status.")
+    public ResponseEntity<Page<OrderResponse>> getAllOrders(
+            @Parameter(description = "Optional status to filter orders by") @RequestParam(required = false) OrderStatus status,
+            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC)
+            Pageable pageable) {
+        Page<OrderResponse> responses = orderService.getAllOrders(status, pageable);
         return ResponseEntity.ok(responses);
     }
 
