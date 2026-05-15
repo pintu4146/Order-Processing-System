@@ -15,6 +15,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -168,9 +171,9 @@ class OrderControllerTest {
         @Test
         @DisplayName("Should return 200 with paginated list of all orders")
         void getAllOrders_ReturnsAll() throws Exception {
-            org.springframework.data.domain.Page<OrderResponse> page =
-                    new org.springframework.data.domain.PageImpl<>(List.of(buildSampleResponse()));
-            when(orderService.getAllOrders(eq(null), any(org.springframework.data.domain.Pageable.class))).thenReturn(page);
+            Page<OrderResponse> page =
+                    new PageImpl<>(List.of(buildSampleResponse()));
+            when(orderService.getAllOrders(eq(null), any(Pageable.class))).thenReturn(page);
 
             mockMvc.perform(get("/api/orders"))
                     .andExpect(status().isOk())
@@ -181,9 +184,9 @@ class OrderControllerTest {
         @Test
         @DisplayName("Should return 200 with filtered orders by status")
         void getAllOrders_FilteredByStatus_Returns200() throws Exception {
-            org.springframework.data.domain.Page<OrderResponse> page =
-                    new org.springframework.data.domain.PageImpl<>(List.of(buildSampleResponse()));
-            when(orderService.getAllOrders(eq(OrderStatus.PENDING), any(org.springframework.data.domain.Pageable.class))).thenReturn(page);
+            Page<OrderResponse> page =
+                    new PageImpl<>(List.of(buildSampleResponse()));
+            when(orderService.getAllOrders(eq(OrderStatus.PENDING), any(Pageable.class))).thenReturn(page);
 
             mockMvc.perform(get("/api/orders").param("status", "PENDING"))
                     .andExpect(status().isOk())
