@@ -25,4 +25,5 @@ COPY --from=build /app/target/*.jar app.jar
 EXPOSE 8080
 
 # Run the application
-ENTRYPOINT ["java", "-Dspring.profiles.active=${SPRING_PROFILES_ACTIVE:-dev}", "-jar", "app.jar"]
+# Spring Boot reads SPRING_PROFILES_ACTIVE from env automatically
+ENTRYPOINT ["java", "-jar", "app.jar"]

@@ -166,23 +166,28 @@ class OrderControllerTest {
     class GetAllOrdersEndpoint {
 
         @Test
-        @DisplayName("Should return 200 with list of all orders")
+        @DisplayName("Should return 200 with paginated list of all orders")
         void getAllOrders_ReturnsAll() throws Exception {
-            when(orderService.getAllOrders(null)).thenReturn(List.of(buildSampleResponse()));
+            org.springframework.data.domain.Page<OrderResponse> page =
+                    new org.springframework.data.domain.PageImpl<>(List.of(buildSampleResponse()));
+            when(orderService.getAllOrders(eq(null), any(org.springframework.data.domain.Pageable.class))).thenReturn(page);
 
             mockMvc.perform(get("/api/orders"))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$", hasSize(1)));
+                    .andExpect(jsonPath("$.content", hasSize(1)))
+                    .andExpect(jsonPath("$.totalElements").value(1));
         }
 
         @Test
         @DisplayName("Should return 200 with filtered orders by status")
         void getAllOrders_FilteredByStatus_Returns200() throws Exception {
-            when(orderService.getAllOrders(OrderStatus.PENDING)).thenReturn(List.of(buildSampleResponse()));
+            org.springframework.data.domain.Page<OrderResponse> page =
+                    new org.springframework.data.domain.PageImpl<>(List.of(buildSampleResponse()));
+            when(orderService.getAllOrders(eq(OrderStatus.PENDING), any(org.springframework.data.domain.Pageable.class))).thenReturn(page);
 
             mockMvc.perform(get("/api/orders").param("status", "PENDING"))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$[0].status").value("PENDING"));
+                    .andExpect(jsonPath("$.content[0].status").value("PENDING"));
         }
     }
 

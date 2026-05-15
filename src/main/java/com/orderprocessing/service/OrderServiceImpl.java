@@ -9,9 +9,12 @@ import com.orderprocessing.model.OrderStatus;
 import com.orderprocessing.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -31,6 +34,7 @@ public class OrderServiceImpl implements OrderService {
         Order order = Order.builder()
                 .customerName(request.getCustomerName())
                 .status(OrderStatus.PENDING)
+                .totalAmount(BigDecimal.ZERO)
                 .build();
 
         // Map each item request to an OrderItem entity and link to the order
@@ -43,8 +47,14 @@ public class OrderServiceImpl implements OrderService {
             order.addItem(item);
         });
 
+        // Calculate total amount (price × quantity for each item)
+        BigDecimal total = order.getItems().stream()
+                .map(item -> item.getPrice().multiply(BigDecimal.valueOf(item.getQuantity())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        order.setTotalAmount(total);
+
         Order savedOrder = orderRepository.save(order);
-        log.info("Order created with id: {}", savedOrder.getId());
+        log.info("Order created with id: {}, total: {}", savedOrder.getId(), total);
         return mapToResponse(savedOrder);
     }
 
@@ -70,6 +80,20 @@ public class OrderServiceImpl implements OrderService {
         return orders.stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<OrderResponse> getAllOrders(OrderStatus status, Pageable pageable) {
+        Page<Order> ordersPage;
+        if (status != null) {
+            log.debug("Fetching orders with status: {} (page: {})", status, pageable.getPageNumber());
+            ordersPage = orderRepository.findByStatus(status, pageable);
+        } else {
+            log.debug("Fetching all orders (page: {})", pageable.getPageNumber());
+            ordersPage = orderRepository.findAll(pageable);
+        }
+        return ordersPage.map(this::mapToResponse);
     }
 
     @Override
@@ -133,6 +157,7 @@ public class OrderServiceImpl implements OrderService {
                 .id(order.getId())
                 .customerName(order.getCustomerName())
                 .status(order.getStatus())
+                .totalAmount(order.getTotalAmount())
                 .createdAt(order.getCreatedAt())
                 .updatedAt(order.getUpdatedAt())
                 .items(order.getItems().stream()
