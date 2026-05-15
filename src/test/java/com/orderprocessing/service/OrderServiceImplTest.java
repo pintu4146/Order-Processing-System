@@ -5,6 +5,7 @@ import com.orderprocessing.dto.OrderItemRequest;
 import com.orderprocessing.dto.OrderResponse;
 import com.orderprocessing.exception.InvalidOrderStateException;
 import com.orderprocessing.exception.OrderNotFoundException;
+import com.orderprocessing.mapper.OrderMapper;
 import com.orderprocessing.model.Order;
 import com.orderprocessing.model.OrderItem;
 import com.orderprocessing.model.OrderStatus;
@@ -16,7 +17,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -40,6 +43,9 @@ class OrderServiceImplTest {
     @Mock
     private OrderRepository orderRepository;
 
+    @Spy
+    private OrderMapper orderMapper = new OrderMapper();
+
     @InjectMocks
     private OrderServiceImpl orderService;
 
@@ -60,6 +66,7 @@ class OrderServiceImplTest {
                 .id(1L)
                 .customerName("John Doe")
                 .status(OrderStatus.PENDING)
+                .totalAmount(new BigDecimal("1200.00"))
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .items(new ArrayList<>(List.of(item)))
@@ -90,7 +97,7 @@ class OrderServiceImplTest {
         void createOrder_WithValidItems_ReturnsPendingOrder() {
             when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> {
                 Order o = invocation.getArgument(0);
-                o.setId(1L);
+                ReflectionTestUtils.setField(o, "id", 1L);
                 return o;
             });
 

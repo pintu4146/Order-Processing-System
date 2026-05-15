@@ -1,8 +1,10 @@
 package com.orderprocessing.service;
 
-import com.orderprocessing.dto.*;
+import com.orderprocessing.dto.CreateOrderRequest;
+import com.orderprocessing.dto.OrderResponse;
 import com.orderprocessing.exception.InvalidOrderStateException;
 import com.orderprocessing.exception.OrderNotFoundException;
+import com.orderprocessing.mapper.OrderMapper;
 import com.orderprocessing.model.Order;
 import com.orderprocessing.model.OrderItem;
 import com.orderprocessing.model.OrderStatus;
@@ -15,9 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -25,6 +25,7 @@ import java.util.stream.Collectors;
 public class OrderServiceImpl implements OrderService {
 
     private final OrderRepository orderRepository;
+    private final OrderMapper orderMapper;
 
     @Override
     @Transactional
@@ -55,7 +56,7 @@ public class OrderServiceImpl implements OrderService {
 
         Order savedOrder = orderRepository.save(order);
         log.info("Order created with id: {}, total: {}", savedOrder.getId(), total);
-        return mapToResponse(savedOrder);
+        return orderMapper.toResponse(savedOrder);
     }
 
     @Override
@@ -63,7 +64,7 @@ public class OrderServiceImpl implements OrderService {
     public OrderResponse getOrderById(Long id) {
         log.debug("Fetching order with id: {}", id);
         Order order = findOrderOrThrow(id);
-        return mapToResponse(order);
+        return orderMapper.toResponse(order);
     }
 
     @Override
@@ -78,8 +79,8 @@ public class OrderServiceImpl implements OrderService {
             orders = orderRepository.findAll();
         }
         return orders.stream()
-                .map(this::mapToResponse)
-                .collect(Collectors.toList());
+                .map(orderMapper::toResponse)
+                .toList();
     }
 
     @Override
@@ -93,7 +94,7 @@ public class OrderServiceImpl implements OrderService {
             log.debug("Fetching all orders (page: {})", pageable.getPageNumber());
             ordersPage = orderRepository.findAll(pageable);
         }
-        return ordersPage.map(this::mapToResponse);
+        return ordersPage.map(orderMapper::toResponse);
     }
 
     @Override
@@ -102,7 +103,8 @@ public class OrderServiceImpl implements OrderService {
         log.info("Attempting to cancel order with id: {}", id);
         Order order = findOrderOrThrow(id);
 
-        if (order.getStatus() != OrderStatus.PENDING) {
+        // Delegate transition validation to the enum — OCP
+        if (!order.getStatus().canTransitionTo(OrderStatus.CANCELLED)) {
             throw new InvalidOrderStateException(
                     "Cannot cancel order " + id + ". Current status is " + order.getStatus()
                             + ". Only PENDING orders can be cancelled."
@@ -110,10 +112,10 @@ public class OrderServiceImpl implements OrderService {
         }
 
         order.setStatus(OrderStatus.CANCELLED);
-        order.setUpdatedAt(LocalDateTime.now());
+        // @UpdateTimestamp handles updatedAt automatically — no manual set needed
         Order savedOrder = orderRepository.save(order);
         log.info("Order {} cancelled successfully", id);
-        return mapToResponse(savedOrder);
+        return orderMapper.toResponse(savedOrder);
     }
 
     @Override
@@ -126,10 +128,10 @@ public class OrderServiceImpl implements OrderService {
             return 0;
         }
 
-        LocalDateTime now = LocalDateTime.now();
         pendingOrders.forEach(order -> {
+            order.getStatus().validateTransition(OrderStatus.PROCESSING);
             order.setStatus(OrderStatus.PROCESSING);
-            order.setUpdatedAt(now);
+            // @UpdateTimestamp handles updatedAt automatically
         });
 
         orderRepository.saveAll(pendingOrders);
@@ -146,35 +148,5 @@ public class OrderServiceImpl implements OrderService {
     private Order findOrderOrThrow(Long id) {
         return orderRepository.findById(id)
                 .orElseThrow(() -> new OrderNotFoundException(id));
-    }
-
-    /**
-     * Map an Order entity to an OrderResponse DTO.
-     * Entities are NEVER returned from public methods — always mapped to DTOs.
-     */
-    private OrderResponse mapToResponse(Order order) {
-        return OrderResponse.builder()
-                .id(order.getId())
-                .customerName(order.getCustomerName())
-                .status(order.getStatus())
-                .totalAmount(order.getTotalAmount())
-                .createdAt(order.getCreatedAt())
-                .updatedAt(order.getUpdatedAt())
-                .items(order.getItems().stream()
-                        .map(this::mapToItemResponse)
-                        .collect(Collectors.toList()))
-                .build();
-    }
-
-    /**
-     * Map an OrderItem entity to an OrderItemResponse DTO.
-     */
-    private OrderItemResponse mapToItemResponse(OrderItem item) {
-        return OrderItemResponse.builder()
-                .id(item.getId())
-                .productName(item.getProductName())
-                .quantity(item.getQuantity())
-                .price(item.getPrice())
-                .build();
     }
 }
