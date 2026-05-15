@@ -18,6 +18,7 @@
 
 - [About The Project](#about-the-project)
 - [Current Implementation](#current-implementation)
+- [Agile Development Process](#agile-development-process)
 - [Tech Stack](#tech-stack)
 - [Getting Started](#getting-started)
 - [API Reference](#api-reference)
@@ -35,6 +36,13 @@
 A clean, enterprise-style Spring Boot REST API that manages the full order lifecycle — creation, retrieval, filtering, cancellation, and automated status transitions via a background scheduler.
 
 This project demonstrates **professional backend engineering** with strict adherence to **SOLID principles**, **DRY/KISS** practices, and **modern Java 17+** conventions.
+
+## Agile Development Process
+
+This system was developed using an **incremental agile workflow**. The entire lifecycle was managed through a phase-by-phase implementation plan, ensuring each component was verified before progressing.
+
+- **Implementation History**: See [implementation_plan.md](implementation_plan.md) for the detailed 10-phase development history.
+- **Phased Delivery**: Each commit corresponds to a logical unit of work, from core data modeling to automated QA and production readiness.
 
 ### Key Highlights
 
@@ -132,7 +140,7 @@ run.cmd prod
 ### Useful Commands
 
 ```bash
-run.cmd test         # Run all 24 tests
+run.cmd test         # Run all 24 tests & generate coverage report
 run.cmd build        # Compile (skip tests)
 run.cmd package      # Package as JAR
 run.cmd clean        # Clean build artifacts
@@ -233,12 +241,15 @@ run.cmd test
 | `OrderControllerTest` | 9 | Integration (MockMvc) |
 | `OrderStatusSchedulerTest` | 2 | Unit (Mockito) |
 
-### QA Automation
+### Code Coverage (JaCoCo)
 
-In addition to unit/integration tests, the project includes automated **System Integration Testing (SIT)** scripts in the `qa/` directory that validate the live running application end-to-end:
+The project maintains high test coverage to ensure business logic reliability.
 
-- `qa/scripts/sit_api_tests.ps1` — Tests health, CRUD, pagination, and cancellation
-- `qa/scripts/sit_scheduler_tests.ps1` — Tests automated PENDING → PROCESSING transition
+- **Service Layer**: 99.1%
+- **Controllers**: 100%
+- **Mappers**: 100%
+
+Full report available at: `target/site/jacoco/index.html` after running `run.cmd test`.
 
 See [docs/testing.md](docs/testing.md) for the full test strategy and edge cases covered.
 
