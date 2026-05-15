@@ -19,6 +19,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.math.BigDecimal;
@@ -149,28 +153,30 @@ class OrderServiceImplTest {
     class GetAllOrders {
 
         @Test
-        @DisplayName("Should return all orders when no status filter")
+        @DisplayName("Should return all orders when no status filter (paginated)")
         void getAllOrders_NoFilter_ReturnsAll() {
-            when(orderRepository.findAll()).thenReturn(List.of(sampleOrder));
+            Page<Order> ordersPage = new PageImpl<>(List.of(sampleOrder));
+            when(orderRepository.findAll(any(Pageable.class))).thenReturn(ordersPage);
 
-            List<OrderResponse> responses = orderService.getAllOrders(null);
+            Page<OrderResponse> responses = orderService.getAllOrders(null, PageRequest.of(0, 10));
 
-            assertThat(responses).hasSize(1);
-            verify(orderRepository).findAll();
-            verify(orderRepository, never()).findByStatus(any());
+            assertThat(responses.getContent()).hasSize(1);
+            verify(orderRepository).findAll(any(Pageable.class));
+            verify(orderRepository, never()).findByStatus(any(), any());
         }
 
         @Test
-        @DisplayName("Should return filtered orders when status provided")
+        @DisplayName("Should return filtered orders when status provided (paginated)")
         void getAllOrders_WithStatusFilter_ReturnsFiltered() {
-            when(orderRepository.findByStatus(OrderStatus.PENDING)).thenReturn(List.of(sampleOrder));
+            Page<Order> ordersPage = new PageImpl<>(List.of(sampleOrder));
+            when(orderRepository.findByStatus(eq(OrderStatus.PENDING), any(Pageable.class))).thenReturn(ordersPage);
 
-            List<OrderResponse> responses = orderService.getAllOrders(OrderStatus.PENDING);
+            Page<OrderResponse> responses = orderService.getAllOrders(OrderStatus.PENDING, PageRequest.of(0, 10));
 
-            assertThat(responses).hasSize(1);
-            assertThat(responses.get(0).getStatus()).isEqualTo(OrderStatus.PENDING);
-            verify(orderRepository).findByStatus(OrderStatus.PENDING);
-            verify(orderRepository, never()).findAll();
+            assertThat(responses.getContent()).hasSize(1);
+            assertThat(responses.getContent().get(0).getStatus()).isEqualTo(OrderStatus.PENDING);
+            verify(orderRepository).findByStatus(eq(OrderStatus.PENDING), any(Pageable.class));
+            verify(orderRepository, never()).findAll(any(Pageable.class));
         }
     }
 

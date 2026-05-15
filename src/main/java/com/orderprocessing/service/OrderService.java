@@ -25,11 +25,7 @@ public interface OrderService {
      */
     OrderResponse getOrderById(Long id);
 
-    /**
-     * List all orders, optionally filtered by status (unpaginated).
-     * @param status if null, returns all orders; otherwise filters by the given status
-     */
-    List<OrderResponse> getAllOrders(OrderStatus status);
+
 
     /**
      * List all orders with pagination, optionally filtered by status.

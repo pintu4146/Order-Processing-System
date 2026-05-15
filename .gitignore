@@ -21,8 +21,7 @@ Thumbs.db
 # Docker
 docker-compose.override.yml
 
-# Local artifacts (Antigravity agent)
-implementation_plan.md
+
 
 # Environment variables (contains secrets — NEVER commit)
 .env

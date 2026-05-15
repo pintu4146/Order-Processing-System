@@ -67,31 +67,17 @@ public class OrderServiceImpl implements OrderService {
         return orderMapper.toResponse(order);
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public List<OrderResponse> getAllOrders(OrderStatus status) {
-        List<Order> orders;
-        if (status != null) {
-            log.debug("Fetching orders with status: {}", status);
-            orders = orderRepository.findByStatus(status);
-        } else {
-            log.debug("Fetching all orders");
-            orders = orderRepository.findAll();
-        }
-        return orders.stream()
-                .map(orderMapper::toResponse)
-                .toList();
-    }
+
 
     @Override
     @Transactional(readOnly = true)
     public Page<OrderResponse> getAllOrders(OrderStatus status, Pageable pageable) {
         Page<Order> ordersPage;
         if (status != null) {
-            log.debug("Fetching orders with status: {} (page: {})", status, pageable.getPageNumber());
+            log.debug("Fetching orders with status: {} (page: {})", status, pageable.isPaged() ? pageable.getPageNumber() : "unpaged");
             ordersPage = orderRepository.findByStatus(status, pageable);
         } else {
-            log.debug("Fetching all orders (page: {})", pageable.getPageNumber());
+            log.debug("Fetching all orders (page: {})", pageable.isPaged() ? pageable.getPageNumber() : "unpaged");
             ordersPage = orderRepository.findAll(pageable);
         }
         return ordersPage.map(orderMapper::toResponse);
